@@ -987,3 +987,53 @@ mod auth {
         );
     }
 }
+
+mod readonly_views {
+    use super::*;
+    use crate::VaultConfig;
+
+    #[test]
+    fn get_config_is_none_before_initialize() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let contract_id = env.register(SplitStreamVault, ());
+        let client = SplitStreamVaultClient::new(&env, &contract_id);
+        assert_eq!(client.get_config(), None);
+    }
+
+    #[test]
+    fn get_config_returns_bound_addresses_after_initialize() {
+        let t = setup();
+        let cfg = t.client().get_config().expect("initialized");
+        assert_eq!(
+            cfg,
+            VaultConfig {
+                admin: t.admin,
+                oracle: t.oracle,
+                token: t.token,
+            }
+        );
+    }
+
+    #[test]
+    fn get_cycle_claimed_total_starts_at_zero_and_increments() {
+        let t = setup();
+        let contributor = Address::generate(&t.env);
+        let (root, claims) = build_manifest(
+            &t.env,
+            &[(t.admin.clone(), 100), (contributor.clone(), 200)],
+        );
+        t.client().post_cycle_root(&1, &root, &300);
+
+        assert_eq!(t.client().get_cycle_claimed_total(&1), 0);
+
+        t.env.ledger().set_timestamp(CHALLENGE_WINDOW_SECS);
+        t.client()
+            .credit_claim(&t.admin, &1, &100, proof_for(&claims, &t.admin));
+        assert_eq!(t.client().get_cycle_claimed_total(&1), 100);
+
+        t.client()
+            .credit_claim(&contributor, &1, &200, proof_for(&claims, &contributor));
+        assert_eq!(t.client().get_cycle_claimed_total(&1), 300);
+    }
+}

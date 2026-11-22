@@ -6,7 +6,7 @@ renumbered.
 
 ## Public functions
 
-22 public functions: 14 state-changing, 8 read-only views. Events are emitted
+24 public functions: 14 state-changing, 10 read-only views. Events are emitted
 through `Events::publish` with a topic tuple and a data payload; the payload is
 `()` unless noted.
 
@@ -34,6 +34,8 @@ through `Events::publish` with a topic tuple and a data payload; the payload is
 | `get_total_credited` | none | — → `i128` | Sum of every contributor's outstanding pull-payment balance. | — |
 | `get_vesting_reserved` | none | — → `i128` | Outstanding vesting liability, `sum(total - claimed)`. | — |
 | `get_available_funds` | none | — → `i128` | Token balance minus both liabilities, floored at zero. The cap on `execute_sweep`. | — |
+| `get_config` | none | — → `Option<VaultConfig>` | `admin`, `oracle`, `token`. `None` before `initialize`. | — |
+| `get_cycle_claimed_total` | none | `cycle_id: u64` → `i128` | Cumulative amount claimed against the cycle; `0` if never claimed. | — |
 
 Notes:
 

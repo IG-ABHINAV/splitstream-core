@@ -56,3 +56,18 @@ pub struct SweepRequestData {
     /// measured from this instant.
     pub requested_at: u64,
 }
+
+/// The addresses this vault deployment is bound to.
+///
+/// Returned by the `get_config` view so operators can read admin, oracle and
+/// token without relying on off-chain records. `None` before `initialize`.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VaultConfig {
+    /// Admin address.
+    pub admin: Address,
+    /// Oracle (CI relay) address.
+    pub oracle: Address,
+    /// SEP-41 token contract address.
+    pub token: Address,
+}

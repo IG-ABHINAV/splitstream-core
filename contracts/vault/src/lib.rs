@@ -45,7 +45,7 @@ mod test;
 use soroban_sdk::{contract, contractimpl, token, Address, BytesN, Env, MuxedAddress, Symbol, Vec};
 
 pub use crate::errors::SplitStreamError;
-pub use crate::types::{CycleInfo, SweepRequestData, VestingData};
+pub use crate::types::{CycleInfo, SweepRequestData, VaultConfig, VestingData};
 
 /// The SplitStream payout vault.
 #[contract]
@@ -312,5 +312,24 @@ impl SplitStreamVault {
             .balance(&env.current_contract_address());
         let reserved = storage::get_reserved_total(&env).unwrap_or(i128::MAX);
         on_hand.saturating_sub(reserved)
+    }
+
+    /// Admin, oracle and token this deployment is bound to, or `None` before
+    /// `initialize`. Read-only: no auth and no TTL bump.
+    pub fn get_config(env: Env) -> Option<VaultConfig> {
+        if !storage::is_initialized(&env) {
+            return None;
+        }
+        Some(VaultConfig {
+            admin: storage::get_admin(&env).ok()?,
+            oracle: storage::get_oracle(&env).ok()?,
+            token: storage::get_token(&env).ok()?,
+        })
+    }
+
+    /// Cumulative amount claimed against a cycle; `0` if nothing has been
+    /// claimed. Read-only: no auth and no TTL bump.
+    pub fn get_cycle_claimed_total(env: Env, cycle_id: u64) -> i128 {
+        storage::get_cycle_claimed_total(&env, cycle_id)
     }
 }
